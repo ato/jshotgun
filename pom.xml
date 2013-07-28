@@ -37,13 +37,11 @@
     <maven.compiler.target>1.7</maven.compiler.target>
   </properties>
 
-  <distributionManagement>
-    <repository>
-      <id>clojars</id>
-      <name>Clojars repository</name>
-      <url>https://clojars.org/repo</url>
-    </repository>
-  </distributionManagement>
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
 
   <build>
     <sourceDirectory>${basedir}/src</sourceDirectory>
