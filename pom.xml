@@ -1,6 +1,6 @@
 <project>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.meshy</groupId>
+  <groupId>org.meshy.jshotgun</groupId>
   <artifactId>jshotgun</artifactId>
   <version>1.0.0</version>
   <packaging>jar</packaging>
