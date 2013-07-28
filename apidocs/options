@@ -1,0 +1,24 @@
+-classpath
+'/home/ato/src/jshotgun/target/classes:/home/ato/.m2/repository/javax/servlet/servlet-api/2.5/servlet-api-2.5.jar'
+-encoding
+'UTF-8'
+-protected
+-sourcepath
+'/home/ato/src/jshotgun/src'
+-author
+-bottom
+'Copyright &#169; 2013. All Rights Reserved.'
+-charset
+'UTF-8'
+-d
+'/home/ato/src/jshotgun/target/site/apidocs'
+-docencoding
+'UTF-8'
+-doctitle
+'jshotgun 1.0.0 API'
+-link
+'http://java.sun.com/javase/6/docs/api'
+-use
+-version
+-windowtitle
+'jshotgun 1.0.0 API'
