@@ -3,19 +3,19 @@ package org.meshy.jshotgun;
 /*
  * jshotgun - nimble code reloading for Java servlets
  * https://github.com/ato/jshotgun
- * 
+ *
  * Copyright (c) 2013 Alex Osborne
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
  * the Software, and to permit persons to whom the Software is furnished to do so,
  * subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
@@ -52,25 +52,25 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * A nimble code reloader for Java servlets.
- * 
+ *
  * Before each request it checks if any class files were changed and if so
  * reloads them and reinitializes the wrapped servlet. Classes loaded from jars
  * are excluded so this class automatically becomes a noop in most production
  * deployments.
- * 
- * Starts reloading immediately in the background so most of the time there's
- * no delay at all.
- * 
+ *
+ * Starts reloading immediately in the background so most of the time there's no
+ * delay at all.
+ *
  * You'll need away of automating the compilation but that could be anything
  * from Eclipse's "build automatically" option to a shell script:
- * 
+ *
  * <pre>
  *     while true; do inotifywait *.java; make; done
  * </pre>
- * 
+ *
  * Concurrency safe: waits for any outstanding requests to be completed before
  * reloading.
- * 
+ *
  * @author Alex Osborne
  * @see <a href="https://github.com/ato/jshotgun">jshotgun</a>
  */
@@ -172,12 +172,12 @@ public class ShotgunServlet extends HttpServlet {
     public HttpServlet loadTarget(ClassLoader classLoader)
             throws ServletException {
         String target = getServletConfig().getInitParameter(
-                "shotgun.targetClass");
+                "org.meshy.jshotgun.target");
         if (target == null) {
             throw new ServletException(
-                "shotgun.targetClass servlet parameter must be set in web.xml. eg\n"
-              + "<init-param><param-name>shotgun.targetClass</param-name>\n"
-              + "<param-value>org.example.MyServlet</param-value></init-param>");
+                    "org.meshy.jshotgun.target servlet parameter must be set in web.xml. eg\n"
+                            + "<init-param><param-name>org.meshy.jshotgun.target</param-name>\n"
+                            + "<param-value>org.example.MyServlet</param-value></init-param>");
         }
         try {
             return (HttpServlet) classLoader.loadClass(target).newInstance();
@@ -196,6 +196,7 @@ public class ShotgunServlet extends HttpServlet {
             setName(ReloaderThread.class.getName());
         }
 
+        @Override
         public void run() {
             try {
                 for (;;) {
@@ -217,7 +218,7 @@ public class ShotgunServlet extends HttpServlet {
     /**
      * This ClassLoader loads local files without telling its parents. Classes
      * loaded from jars or anywhere else are just delegated as normal.
-     * 
+     *
      * The directories the classes were loaded from are watched for changes.
      */
     static class SpookyClassLoader extends SecureClassLoader implements
