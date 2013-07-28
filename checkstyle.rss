@@ -2,20 +2,20 @@
 
 <rss version="0.91">
   <channel>
-    <title>jshotgun - Checkstyle report</title>
-    <link>https://github.com/ato/jshotgun</link>
-    <description>jshotgun - Checkstyle report</description>
+    <title>JShotgun - Checkstyle report</title>
+    <link>https://ato.github.io/jshotgun</link>
+    <description>JShotgun - Checkstyle report</description>
     <language>en-us</language>
     <copyright>&#169;2013</copyright>
     <item>
       <title>File: 1,
-             Errors: 14,
+             Errors: 2,
              Warnings: 0,
              Infos: 0
       </title>
-            <link>https://github.com/ato/jshotgun/checkstyle.html</link>
+            <link>https://ato.github.io/jshotgun/checkstyle.html</link>
       <description>
-        <p>Click <a href="https://github.com/ato/jshotgun/checkstyle.html">here</a> for the full Checkstyle report.</p>
+        <p>Click <a href="https://ato.github.io/jshotgun/checkstyle.html">here</a> for the full Checkstyle report.</p>
 
         <table summary="Files" boder="1">
           <thead>
@@ -29,7 +29,7 @@
           <tbody>
                           <tr>
                 <td>
-                  <a href="https://github.com/ato/jshotgun/checkstyle.html#org.meshy.jshotgun.ShotgunServlet.java">org/meshy/jshotgun/ShotgunServlet.java</a>
+                  <a href="https://ato.github.io/jshotgun/checkstyle.html#org.meshy.jshotgun.ShotgunServlet.java">org/meshy/jshotgun/ShotgunServlet.java</a>
                 </td>
                 <td>
                   0
@@ -38,7 +38,7 @@
                   0
                 </td>
                 <td>
-                  14
+                  2
                 </td>
               </tr>
                       </tbody>
