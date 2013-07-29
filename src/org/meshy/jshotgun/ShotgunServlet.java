@@ -233,6 +233,10 @@ public class ShotgunServlet extends HttpServlet {
 
         @Override
         public Class<?> loadClass(String name) throws ClassNotFoundException {
+            Class<?> c = classes.get(name);
+            if (c != null) {
+                return c;
+            }
             Path path = pathForClass(name);
             if (path == null) {
                 return super.loadClass(name);
