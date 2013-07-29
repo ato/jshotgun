@@ -39,8 +39,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.WatchService;
 import java.security.SecureClassLoader;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -223,7 +223,7 @@ public class ShotgunServlet extends HttpServlet {
      */
     static class SpookyClassLoader extends SecureClassLoader implements
             AutoCloseable {
-        final Map<String, Class<?>> classes = new ConcurrentHashMap<>();
+        final Map<String, Class<?>> classes = new HashMap<>();
         WatchService watcher;
         boolean changed = false, closed = false;
 
@@ -232,7 +232,7 @@ public class ShotgunServlet extends HttpServlet {
         }
 
         @Override
-        public Class<?> loadClass(String name) throws ClassNotFoundException {
+        public synchronized Class<?> loadClass(String name) throws ClassNotFoundException {
             Class<?> c = classes.get(name);
             if (c != null) {
                 return c;
