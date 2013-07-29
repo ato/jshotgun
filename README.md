@@ -27,21 +27,42 @@ reloading.
 Usage
 -----
 
-Configure it in your web.xml file, wrapping another HttpServlet class.
-Here's an example of using it with [Resteasy]:
+JShoting is normally configured in your web.xml file. Set the 
+`org.meshy.jshotgun.target` init-param to the classname of the HttpServlet to
+be wrapped. Here are some examples with different web frameworks.
+
+### JShotgun with Spring
 
     <servlet>
-      <servlet-name>ExampleServlet</servlet-name>
+      <servlet-name>appServlet</servlet-name>
+      <servlet-class>org.meshy.jshotgun.ShotgunServlet</servlet-class>
+      <init-param>
+        <param-name>org.meshy.jshotgun.target</param-name>
+        <param-value>org.springframework.web.servlet.DispatcherServlet</param-value>
+      </init-param>
+      <init-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>/WEB-INF/spring/app/servlet-context.xml</param-value>
+      </init-param>
+      <load-on-startup>1</load-on-startup>
+    </servlet>
+
+### JShotgun with RESTEasy JAX-RS
+
+    <servlet>
+      <servlet-name>Resteasy</servlet-name>
       <servlet-class>org.meshy.jshotgun.ShotgunServlet</servlet-class>
       <init-param>
         <param-name>org.meshy.jshotgun.target</param-name>
         <param-value>org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher</param-value>
       </init-param>
+      <init-param>
+        <param-name>javax.ws.rs.Application</param-name>
+        <param-value>com.restfully.shop.services.ShoppingApplication</param-value>
+      </init-param>
+      <load-on-startup>1</load-on-startup>
     </servlet>
-    <servlet-mapping>
-      <servlet-name>ExampleServlet</servlet-name>
-      <url-pattern>/*</url-pattern>
-    </servlet-mapping>
+
 
 Getting it
 ----------
@@ -52,8 +73,8 @@ Some day I'll get around to pushing it to Central. For now you'll need to add
 the Clojars repository:
 
     <repository>
-     <id>clojars.org</id>
-     <url>http://clojars.org/repo</url>
+      <id>clojars.org</id>
+      <url>http://clojars.org/repo</url>
     </repository>
 
 Add this dependency to your pom.xml:
