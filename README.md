@@ -97,6 +97,9 @@ License
 The MIT License (MIT)
 Copyright (c) 2013 Alex Osborne
 
+The OS X branch includes [barbarywatchservice] which is GPL licensed.
+
+[barbarywatchservice]: https://code.google.com/p/barbarywatchservice/
 [Resteasy]: https://www.jboss.org/resteasy
 [Clojars]: https://clojars.org/org.meshy/jshotgun
 [raw jar files]: https://clojars.org/repo/org/meshy/jshotgun/

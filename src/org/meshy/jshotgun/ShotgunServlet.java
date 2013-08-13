@@ -50,6 +50,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.barbarysoftware.watchservice.MacOSXWatchService;
+import com.barbarysoftware.watchservice.WatchableFile;
+
 /**
  * A nimble code reloader for Java servlets.
  *
@@ -264,9 +267,17 @@ public class ShotgunServlet extends HttpServlet {
                 // delay creating the WatchService until we actually need it as
                 // it starts a background polling thread
                 if (watcher == null) {
-                    watcher = FileSystems.getDefault().newWatchService();
+                    if (System.getProperty("os.name").equals("Mac OS X")) {
+                        watcher = MacOSXWatchService.newWatchService();
+                    }  else {
+                        watcher = FileSystems.getDefault().newWatchService();
+                    }
                 }
-                dir.register(watcher, ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE);
+                if (System.getProperty("os.name").equals("Mac OS X")) {
+                    new WatchableFile(dir).register(watcher, ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE);
+                } else {
+                    dir.register(watcher, ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE);
+                }
             } catch (NoSuchFileException e) {
                 // directory disappeared? that's ok.
             }

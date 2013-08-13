@@ -3,8 +3,8 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.meshy</groupId>
   <!-- for central use <groupId>org.meshy.jshotgun</groupId> -->
-  <artifactId>jshotgun</artifactId>
-  <version>1.0.2-SNAPSHOT</version>
+  <artifactId>jshotgun-osx</artifactId>
+  <version>1.0.2</version>
   <packaging>jar</packaging>
 
   <name>JShotgun</name>
@@ -12,11 +12,17 @@
   <url>https://ato.github.io/jshotgun</url>
 
   <licenses>
+    <!--
     <license>
       <name>The MIT License</name>
       <url>http://www.opensource.org/licenses/mit-license.php</url>
       <distribution>repo</distribution>
     </license>
+    -->
+        <license>
+            <name>GNU General Public License (GPL)</name>
+            <url>http://www.gnu.org/licenses/gpl.html</url>
+        </license>
   </licenses>
 
   <scm>
@@ -39,13 +45,8 @@
     <maven.compiler.target>1.7</maven.compiler.target>
   </properties>
 
-  <!-- for central
-  <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
-  </parent>
-  -->
+  <!-- for central <parent> <groupId>org.sonatype.oss</groupId> <artifactId>oss-parent</artifactId> 
+    <version>7</version> </parent> -->
 
   <!-- for clojars -->
   <distributionManagement>
@@ -170,5 +171,12 @@
       <version>4.11</version>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>net.java.dev.jna</groupId>
+      <artifactId>jna</artifactId>
+      <version>4.0.0</version>
+    </dependency>
+
   </dependencies>
 </project>

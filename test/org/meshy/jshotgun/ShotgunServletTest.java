@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.meshy.jshotgun.ShotgunServlet.SpookyClassLoader;
 
 public class ShotgunServletTest {
+    DummyClass dummy = new DummyClass();
 
     @Test
     public void testClassLoader() throws Exception {
