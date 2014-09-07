@@ -24,25 +24,7 @@ package org.meshy.jshotgun;
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
-
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.ClosedWatchServiceException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.WatchService;
-import java.security.SecureClassLoader;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -76,250 +58,67 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class ShotgunServlet extends HttpServlet {
 
-    private static final long serialVersionUID = -7847588451972338616L;
-    final ReadWriteLock lock = new ReentrantReadWriteLock();
-    SpookyClassLoader classLoader;
-    HttpServlet servlet;
-    ReloaderThread reloader;
+	private static final long serialVersionUID = -7847588451972338615L;
+	HttpServlet servlet;
+	Shotgun shotgun = new Shotgun(new Target());
 
-    @Override
-    protected void service(HttpServletRequest request,
-            HttpServletResponse response) throws ServletException, IOException {
-        try {
-            lock.readLock().lock();
-            while (servlet == null || classLoader.sawAnythingChange()) {
-                lock.readLock().unlock();
-                tearDown();
-                setUp();
-                lock.readLock().lock();
-            }
-            Thread.currentThread().setContextClassLoader(classLoader);
-            servlet.service(request, response);
-        } finally {
-            lock.readLock().unlock();
-        }
-        spawnReloader();
-    }
+	@Override
+	protected void service(HttpServletRequest request,
+			HttpServletResponse response) throws ServletException, IOException {
+		try {
+			shotgun.lock();
+			servlet.service(request, response);
+		} finally {
+			shotgun.unlock();
+		}
+	}
 
-    void setUp() throws ServletException {
-        try {
-            lock.writeLock().lock();
-            if (servlet == null) {
-                Thread thread = Thread.currentThread();
-                classLoader = new SpookyClassLoader(
-                        thread.getContextClassLoader());
-                thread.setContextClassLoader(classLoader);
-                servlet = loadTarget(classLoader);
-                servlet.init(getServletConfig());
-            }
-        } finally {
-            lock.writeLock().unlock();
-        }
-    }
+	@Override
+	public void init(ServletConfig config) throws ServletException {
+		super.init(config);
+		shotgun.setUp();
+	}
 
-    void tearDown() {
-        try {
-            lock.writeLock().lock();
-            if (servlet != null && classLoader.sawAnythingChange()) {
-                servlet.destroy();
-                servlet = null;
-                classLoader.close();
-            }
-        } finally {
-            lock.writeLock().unlock();
-        }
-    }
+	@Override
+	public void destroy() {
+		super.destroy();
+		shotgun.destroy();
+	}
 
-    void spawnReloader() {
-        if (reloader == null && classLoader.isWatchingAnything()) {
-            try {
-                lock.writeLock().lock();
-                if (reloader == null && classLoader.isWatchingAnything()) {
-                    reloader = new ReloaderThread();
-                    reloader.start();
-                }
-            } finally {
-                lock.writeLock().unlock();
-            }
-        }
-    }
+	public HttpServlet loadTarget(ClassLoader classLoader)
+			throws ServletException {
+		String targetName = getServletConfig().getInitParameter(
+				"org.meshy.jshotgun.target");
+		if (targetName == null) {
+			throw new ServletException(
+					"org.meshy.jshotgun.target servlet parameter must be set in web.xml. eg\n"
+							+ "<init-param><param-name>org.meshy.jshotgun.target</param-name>\n"
+							+ "<param-value>org.example.MyServlet</param-value></init-param>");
+		}
+		try {
+			return (HttpServlet) classLoader.loadClass(targetName)
+					.newInstance();
+		} catch (ClassNotFoundException | InstantiationException
+				| IllegalAccessException e) {
+			throw new ServletException("unable to load " + targetName, e);
+		}
+	}
 
-    @Override
-    public void init(ServletConfig config) throws ServletException {
-        super.init(config);
-        setUp();
-    }
+	private class Target implements Shotgun.Target {
+		@Override
+		public void start(ClassLoader classLoader) {
+			try {
+				servlet = loadTarget(classLoader);
+				servlet.init(getServletConfig());
+			} catch (ServletException e) {
+				throw new RuntimeException(e);
+			}
+		}
 
-    @Override
-    public void destroy() {
-        super.destroy();
-        try {
-            lock.writeLock().lock();
-            if (servlet != null) {
-                classLoader.close();
-                servlet.destroy();
-                servlet = null;
-            }
-            if (reloader != null) {
-                reloader.interrupt();
-                reloader = null;
-            }
-        } finally {
-            lock.writeLock().unlock();
-        }
-    }
-
-    public HttpServlet loadTarget(ClassLoader classLoader)
-            throws ServletException {
-        String target = getServletConfig().getInitParameter(
-                "org.meshy.jshotgun.target");
-        if (target == null) {
-            throw new ServletException(
-                    "org.meshy.jshotgun.target servlet parameter must be set in web.xml. eg\n"
-                            + "<init-param><param-name>org.meshy.jshotgun.target</param-name>\n"
-                            + "<param-value>org.example.MyServlet</param-value></init-param>");
-        }
-        try {
-            return (HttpServlet) classLoader.loadClass(target).newInstance();
-        } catch (ClassNotFoundException | InstantiationException
-                | IllegalAccessException e) {
-            throw new ServletException("unable to load " + target, e);
-        }
-    }
-
-    /**
-     * Watches for changes in the background and reloads as soon as it sees any.
-     */
-    class ReloaderThread extends Thread {
-
-        ReloaderThread() {
-            setName(ReloaderThread.class.getName());
-        }
-
-        @Override
-        public void run() {
-            try {
-                for (;;) {
-                    setUp();
-                    if (classLoader.waitForChange()) {
-                        tearDown();
-                    }
-                }
-            } catch (ServletException e) {
-                throw new RuntimeException("reloading failed", e);
-            } catch (InterruptedException e) {
-                // we're done.
-            }
-            reloader = null;
-        }
-
-    }
-
-    /**
-     * This ClassLoader loads local files without telling its parents. Classes
-     * loaded from jars or anywhere else are just delegated as normal.
-     *
-     * The directories the classes were loaded from are watched for changes.
-     */
-    static class SpookyClassLoader extends SecureClassLoader implements
-            AutoCloseable {
-        final Map<String, Class<?>> classes = new HashMap<>();
-        WatchService watcher;
-        boolean changed = false, closed = false;
-
-        public SpookyClassLoader(ClassLoader parent) {
-            super(parent);
-        }
-
-        @Override
-        public synchronized Class<?> loadClass(String name) throws ClassNotFoundException {
-            Class<?> c = classes.get(name);
-            if (c != null) {
-                return c;
-            }
-            Path path = pathForClass(name);
-            if (path == null) {
-                return super.loadClass(name);
-            } else {
-                try {
-                    return loadClass(name, path);
-                } catch (Exception e) {
-                    throw new ClassNotFoundException(name, e);
-                }
-            }
-        }
-
-        private Class<?> loadClass(String name, Path path) throws Exception {
-            if (!closed) {
-                watch(path.getParent());
-            }
-            byte[] b = Files.readAllBytes(path);
-            Class<?> c = defineClass(name, b, 0, b.length);
-            classes.put(name, c);
-            return c;
-        }
-
-        private void watch(Path dir) throws IOException {
-            try {
-                // delay creating the WatchService until we actually need it as
-                // it starts a background polling thread
-                if (watcher == null) {
-                    watcher = FileSystems.getDefault().newWatchService();
-                }
-                dir.register(watcher, ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE);
-            } catch (NoSuchFileException e) {
-                // directory disappeared? that's ok.
-            }
-        }
-
-        Path pathForClass(String name) {
-            URL url = getResource(name.replace('.', '/').concat(".class"));
-            if (url != null && "file".equals(url.getProtocol())) {
-                try {
-                    return Paths.get(url.toURI());
-                } catch (URISyntaxException e) {
-                    return null;
-                }
-            } else {
-                return null;
-            }
-        }
-
-        boolean sawAnythingChange() {
-            if (!closed && watcher != null && watcher.poll() != null) {
-                changed = true;
-                close();
-            }
-            return changed;
-        }
-
-        boolean waitForChange() throws InterruptedException {
-            try {
-                if (!closed && watcher != null && watcher.take() != null) {
-                    changed = true;
-                    close();
-                }
-            } catch (ClosedWatchServiceException e) {
-                // that's ok.
-            }
-            return changed;
-        }
-
-        boolean isWatchingAnything() {
-            return watcher != null;
-        }
-
-        @Override
-        public synchronized void close() {
-            closed = true;
-            if (watcher != null) {
-                try {
-                    watcher.close();
-                    watcher = null;
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-    }
+		@Override
+		public void stop() {
+			servlet.destroy();
+			servlet = null;
+		}
+	}
 }
